@@ -14,83 +14,83 @@ class ListadoMaterias extends Component {
     super(props);
     this.state = {
         data: [],
-        customRow: [],
+        materiasRow: [],
         contadorHoras: 0
     };
+     this.actualizarState = this.actualizarState.bind(this);
   }
-  agregarSlotMateria = () => {
+  agregarSlotMateria = (idx) => {
+    console.log("INIT agregarSlotMateria");
     this.setState({
-      customRow: [
-        ...this.state.customRow,
-        { materiaData: null }
+      materiasRow: [
+        ...this.state.materiasRow,
+        { materiaData: { title: null, hours: 0, professor: null , SIU_code: null}, }
       ]
     });
     console.log(this.state);
+    console.log("END agregarSlotMateria");
   };
 
-  cambiarMateria(idx, materia) {
-       console.log([idx, materia]);
+  actualizarState(idx, materia) {
+      console.log(idx, materia);
+      this.setState(prevState => ({
+          materiasRow: prevState.materiasRow.map((todo, index) =>
+            index === idx ? {  materiaData: materia }: todo
+          )
+      }))
+      this.setState(prevState => ({
+          contadorHoras: (this.state.materiasRow.reduce((total, current) => total + current.hours, 0))
+      }))
+
+      // this.state.materiasRow.map(m => m.hours).reduce((prev, curr) => prev + curr, 0);
+      console.log(this.state);
+      // console.log(this.state.materiasRow.reduce((total, current) => total + parseInt(current.hours), 0));
   }
 
 
+
     render() {
-    // const { classes } = this.props;
+        let total = (this.state.materiasRow.reduce((total, current) => total = [total, current.hours ? current.hours : -1], []));
+        return (
+          <React.Fragment>
+              <Grid
+                  container
+                  spacing={0}
+                  direction="column"
+                  alignItems="center"
+                  justifyContent="center"
+                  // style={{ minHeight: '100vh' }}
+                >
+                {
+                  this.state.materiasRow.map((todo, index) => {
+                      return (
+                        <Grid item xs={3} handleClick={this.actualizarState}>
+                            {/*<MateriaSearch idx={index} handle={this.actualizarState}/>*/}
+                            <MateriaSearch2 idx={index} handle={this.actualizarState}/>
+                        </Grid>
+                      );
+                  })}
+                </Grid>
 
-    return (
-      <React.Fragment>
-          <Grid
-              container
-              spacing={0}
-              direction="column"
-              alignItems="center"
-              justifyContent="center"
-              // style={{ minHeight: '100vh' }}
-            >
-            {
-              this.state.customRow.map((todo, index) => {
-                  return (
-                    <Grid item xs={3}>
-                        <MateriaSearch idx={index} handle={this.cambiarMateria}/>
-                    </Grid>
-                  );
-              })}
-            </Grid>
+            <Tooltip title="Agregar una materia a la lista" placement="right-start">
+                <Button variant="contained" onClick={() => this.agregarSlotMateria()}>Agregar materia</Button>
+            </Tooltip>
 
-        <Tooltip title="Agregar una materia a la lista" placement="right-start">
-            <Button variant="contained" onClick={() => this.agregarSlotMateria()}>Agregar materia</Button>
-        </Tooltip>
+            <p>Cantidad de horas: {total} <Contador /></p>
 
-        <p>Cantidad de horas: <Contador /></p>
-
-      </React.Fragment>
-    );
+          </React.Fragment>
+        );
   }
 }
 
 export default ListadoMaterias;
 
-class MateriaSearch extends Component {
-    constructor(props) {
-        super(props)
-        this.state = { horas: 0, idx: this.props.idx }
-        this.handle = this.props.handle;
-    }
+function handleCheck(value) {
+    return materiasList.some(item => value === item);
+}
 
-
-    handleTextFieldChange (e){
-        this.setState({
-            textFieldValue: e.target.value
-        });
-    }
-
-    cambiarMateria(n) {
-        this.setState({horas: n || 0});
-        console.log(this.state)
-
-    }
-
-    render () {
-        return (
+const MateriaSearch2 = (props) => {
+    return (
             <Autocomplete
                 freeSolo
                 id="free-solo-2-demo"
@@ -106,7 +106,7 @@ class MateriaSearch extends Component {
                 renderInput={(params) => (
                     <TextField
                         {...params}
-                        label={"Buscar materia " + (this.props.idx + 1) + "..."}
+                        label={"Materia " + (props.idx + 1) + "..."}
                         InputProps={{
                             ...params.InputProps,
                             type: 'search',
@@ -114,15 +114,60 @@ class MateriaSearch extends Component {
                     />
                 )}
                 onChange={(e: object, value: any | null) => {
-                  console.log('value', value );
-                  console.log("                  ");
-                  this.cambiarMateria(value.hours)
+                  console.log('value', handleCheck(value) ? value : null);
+                  props.handle(props.idx, handleCheck(value) ? value : null);
+                  console.log(props);
+                  // this.cambiarMateria(value.hours)
                   // setFieldValue("address.country", value);
                 }}
             />
         )
-    }
-}
+};
+// class MateriaSearch extends Component {
+//     constructor(props) {
+//         super(props)
+//         // this.state = { horas: 0, idx: this.props.idx };
+//         this.idx = this.props.idx;
+//         this.handle = this.props.handle;
+//     }
+//
+//     render () {
+//         return (
+//             <Autocomplete
+//                 freeSolo
+//                 id="free-solo-2-demo"
+//                 disableClearable
+//                 // options={materiasList.map((option) => option.title + " (" + option.hours + " horas)")}
+//                 options={materiasList}
+//                 getOptionLabel={option => option.title + " (" + option.hours + " horas)"}
+//                 style={{
+//                     width: 500,
+//                     padding: "10px",
+//                     align: "center"
+//                 }}
+//                 renderInput={(params) => (
+//                     <TextField
+//                         {...params}
+//                         label={"Buscar materia " + (this.props.idx + 1) + "..."}
+//                         InputProps={{
+//                             ...params.InputProps,
+//                             type: 'search',
+//                         }}
+//                     />
+//                 )}
+//                 onChange={(e: object, value: any | null) => {
+//                   console.log('value', handleCheck(value) ? value : null);
+//                   this.handle(this.idx, handleCheck(value) ? value : null);
+//                   // console.log("                  ");
+//                   // this.cambiarMateria(value.hours)
+//                   // setFieldValue("address.country", value);
+//                 }}
+//             />
+//         )
+//     }
+//
+//
+// }
 
 
 // Top 100 films as rated by IMDb users. http://www.imdb.com/chart/top

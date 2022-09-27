@@ -1,10 +1,10 @@
 import * as React from 'react';
 import TextField from '@mui/material/TextField';
 import Autocomplete from '@mui/material/Autocomplete';
-import {Component} from "react";
+import {Component, useState} from "react";
 import {Button, Grid, Tooltip} from "@mui/material";
 
-import Contador from "./Contador";
+// import Contador from "./Contador";
 // import AddIcon from "@material-ui/icons/Add";
 // import AddIcon from '@mui/icons-material/Add';
 // import Fab from "@material-ui/core/Fab";
@@ -13,19 +13,20 @@ class ListadoMaterias extends Component {
   constructor(props) {
     super(props);
     this.state = {
-        data: [],
-        materiasRow: [],
-        contadorHoras: 0
+        materiasElegidas: [],
+        totalHoras: function () {
+            return this.materiasElegidas.reduce((total, current) => total + current.hours, 0)
+        }
     };
      this.actualizarState = this.actualizarState.bind(this);
   }
   agregarSlotMateria = (idx) => {
     console.log("INIT agregarSlotMateria");
     this.setState({
-      materiasRow: [
-        ...this.state.materiasRow,
-        { materiaData: { title: null, hours: 0, professor: null , SIU_code: null}, }
-      ]
+      materiasElegidas: [
+        ...this.state.materiasElegidas,
+        {  title: null, hours: 0, professor: null , SIU_code: null }
+      ],
     });
     console.log(this.state);
     console.log("END agregarSlotMateria");
@@ -34,23 +35,19 @@ class ListadoMaterias extends Component {
   actualizarState(idx, materia) {
       console.log(idx, materia);
       this.setState(prevState => ({
-          materiasRow: prevState.materiasRow.map((todo, index) =>
-            index === idx ? {  materiaData: materia }: todo
+          materiasElegidas:  prevState.materiasElegidas.map((todo, index) =>
+            index === idx ? materia : todo
           )
       }))
-      this.setState(prevState => ({
-          contadorHoras: (this.state.materiasRow.reduce((total, current) => total + current.hours, 0))
-      }))
 
-      // this.state.materiasRow.map(m => m.hours).reduce((prev, curr) => prev + curr, 0);
+      // this.state.materiasElegidas.map(m => m.hours).reduce((prev, curr) => prev + curr, 0);
       console.log(this.state);
-      // console.log(this.state.materiasRow.reduce((total, current) => total + parseInt(current.hours), 0));
+      // console.log(this.state.materiasElegidas.reduce((total, current) => total + parseInt(current.hours), 0));
   }
 
 
 
     render() {
-        let total = (this.state.materiasRow.reduce((total, current) => total = [total, current.hours ? current.hours : -1], []));
         return (
           <React.Fragment>
               <Grid
@@ -62,7 +59,7 @@ class ListadoMaterias extends Component {
                   // style={{ minHeight: '100vh' }}
                 >
                 {
-                  this.state.materiasRow.map((todo, index) => {
+                  this.state.materiasElegidas.map((todo, index) => {
                       return (
                         <Grid item xs={3} handleClick={this.actualizarState}>
                             {/*<MateriaSearch idx={index} handle={this.actualizarState}/>*/}
@@ -76,7 +73,7 @@ class ListadoMaterias extends Component {
                 <Button variant="contained" onClick={() => this.agregarSlotMateria()}>Agregar materia</Button>
             </Tooltip>
 
-            <p>Cantidad de horas: {total} <Contador /></p>
+            <p>Cantidad de horas: {this.state.totalHoras()}</p>
 
           </React.Fragment>
         );
@@ -85,11 +82,12 @@ class ListadoMaterias extends Component {
 
 export default ListadoMaterias;
 
-function handleCheck(value) {
+function esMateriaValida(value) {
     return materiasList.some(item => value === item);
 }
 
 const MateriaSearch2 = (props) => {
+    const [valorEscrito, setValorEscrito] = useState("")
     return (
             <Autocomplete
                 freeSolo
@@ -107,6 +105,8 @@ const MateriaSearch2 = (props) => {
                     <TextField
                         {...params}
                         label={"Materia " + (props.idx + 1) + "..."}
+                        error={valorEscrito && !esMateriaValida(valorEscrito)}
+                        helperText={!esMateriaValida(valorEscrito) && "Esta no es una materia valida" }
                         InputProps={{
                             ...params.InputProps,
                             type: 'search',
@@ -114,8 +114,9 @@ const MateriaSearch2 = (props) => {
                     />
                 )}
                 onChange={(e: object, value: any | null) => {
-                  console.log('value', handleCheck(value) ? value : null);
-                  props.handle(props.idx, handleCheck(value) ? value : null);
+                    setValorEscrito(value)
+                  console.log('value', esMateriaValida(value) ? value : null);
+                  if(esMateriaValida(value)) props.handle(props.idx,  value);
                   console.log(props);
                   // this.cambiarMateria(value.hours)
                   // setFieldValue("address.country", value);

@@ -1,3 +1,4 @@
+/*global PublicGoogleSheetsParser*/
 import * as React from 'react';
 import TextField from '@mui/material/TextField';
 import Autocomplete from '@mui/material/Autocomplete';
@@ -61,7 +62,7 @@ class ListadoMaterias extends Component {
                 {
                   this.state.materiasElegidas.map((todo, index) => {
                       return (
-                        <Grid item xs={3} handleClick={this.actualizarState}>
+                        <Grid key={index} item xs={3}>
                             {/*<MateriaSearch idx={index} handle={this.actualizarState}/>*/}
                             <MateriaSearch2 idx={index} handle={this.actualizarState}/>
                         </Grid>
@@ -87,15 +88,24 @@ function esMateriaValida(value) {
 }
 
 const MateriaSearch2 = (props) => {
-    const [valorEscrito, setValorEscrito] = useState("")
-    return (
+  const [valorEscrito, setValorEscrito] = useState("")
+  const [materiasOptions, setMateriasOptions] = useState([])
+
+  React.useEffect(() => {
+    const spreadsheetId = '1__20B99GvL0rxSEXQrIufYeGTYpCz6ypOx7dBTRm3YA'
+    const parser = new PublicGoogleSheetsParser()
+    parser.parse(spreadsheetId).then(materias => setMateriasOptions(materias))
+  }, [])
+
+  return (
             <Autocomplete
                 freeSolo
                 id="free-solo-2-demo"
                 disableClearable
                 // options={materiasList.map((option) => option.title + " (" + option.hours + " horas)")}
-                options={materiasList}
-                getOptionLabel={option => option.title + " (" + option.hours + " horas)"}
+                options={materiasOptions}
+                // getOptionLabel={option => option.title + " (" + option.hours + " horas)"}
+                getOptionLabel={option => JSON.stringify(option)}
                 style={{
                     width: 500,
                     padding: "10px",
@@ -105,7 +115,7 @@ const MateriaSearch2 = (props) => {
                     <TextField
                         {...params}
                         label={"Materia " + (props.idx + 1) + "..."}
-                        error={valorEscrito && !esMateriaValida(valorEscrito)}
+                        error={!!valorEscrito && !esMateriaValida(valorEscrito)}
                         helperText={!esMateriaValida(valorEscrito) && "Esta no es una materia valida" }
                         InputProps={{
                             ...params.InputProps,
@@ -113,7 +123,7 @@ const MateriaSearch2 = (props) => {
                         }}
                     />
                 )}
-                onChange={(e: object, value: any | null) => {
+                onChange={(e, value) => {
                     setValorEscrito(value)
                   console.log('value', esMateriaValida(value) ? value : null);
                   if(esMateriaValida(value)) props.handle(props.idx,  value);
